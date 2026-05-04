@@ -1,0 +1,16 @@
+{
+  "name": "offer-negotiation-simulator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test-page.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "playwright": "^1.59.1"
+  }
+}

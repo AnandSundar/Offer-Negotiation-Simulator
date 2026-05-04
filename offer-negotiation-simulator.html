@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offer Negotiation Simulator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%230A0A0B' width='32' height='32' rx='6'/><path d='M8 22V14a2 2 0 012-2h12a2 2 0 012 2v8' stroke='%2314B8A6' stroke-width='2' fill='none'/><rect x='6' y='12' width='20' height='10' rx='2' stroke='%2314B8A6' stroke-width='2' fill='none'/><path d='M16 12V8l4-3' stroke='%2314B8A6' stroke-width='2' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&f[]=instrument-serif@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Instrument Serif', Georgia, serif;
+
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 0.9375rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.0625rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+      --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+      --text-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+      --text-hero: clamp(2.5rem, 2rem + 2.5vw, 4rem);
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+
+      --transition-fast: 150ms ease;
+      --transition-base: 300ms ease-out;
+      --transition-slow: 400ms ease-out;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #0A0A0B;
+      --bg-surface: #111113;
+      --bg-elevated: #1A1A1D;
+      --bg-hover: #222225;
+      --text-primary: #FAFAFA;
+      --text-secondary: #A1A1AA;
+      --text-muted: #71717A;
+      --border: #27272A;
+      --border-focus: #3F3F46;
+      --accent: #14B8A6;
+      --accent-hover: #0D9488;
+      --accent-muted: rgba(20, 184, 166, 0.15);
+      --accent-subtle: rgba(20, 184, 166, 0.08);
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --success: #22C55E;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #FAFAFA;
+      --bg-surface: #FFFFFF;
+      --bg-elevated: #F4F4F5;
+      --bg-hover: #E4E4E7;
+      --text-primary: #18181B;
+      --text-secondary: #52525B;
+      --text-muted: #A1A1AA;
+      --border: #E4E4E7;
+      --border-focus: #D4D4D8;
+      --accent: #0D9488;
+      --accent-hover: #0F766E;
+      --accent-muted: rgba(13, 148, 136, 0.12);
+      --accent-subtle: rgba(13, 148, 136, 0.06);
+      --error: #DC2626;
+      --warning: #D97706;
+      --success: #16A34A;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-4) 0;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .logo svg {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .logo-text {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .theme-toggle svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      transition: transform var(--transition-base);
+    }
+
+    .theme-toggle .sun { display: none; }
+    .theme-toggle .moon { display: block; }
+    [data-theme="light"] .theme-toggle .sun { display: block; }
+    [data-theme="light"] .theme-toggle .moon { display: none; }
+
+    .progress-section {
+      padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+
+    .progress-label {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .progress-percentage {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-bar {
+      height: 0.25rem;
+      background: var(--bg-elevated);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 9999px;
+      transition: width var(--transition-slow);
+      width: 0%;
+    }
+
+    .step {
+      display: none;
+      animation: fadeSlideIn var(--transition-base) forwards;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(1.25rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .step-header {
+      margin-bottom: var(--space-8);
+    }
+
+    .step-eyebrow {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: var(--space-2);
+    }
+
+    .step-title {
+      font-family: var(--font-serif);
+      font-size: var(--text-2xl);
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: var(--space-3);
+    }
+
+    .step-description {
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      max-width: 40rem;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: var(--space-6);
+    }
+
+    .form-row {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 640px) {
+      .form-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+      .form-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .form-label {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .form-label .optional {
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-left: var(--space-1);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      font-family: inherit;
+      font-size: var(--text-base);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-input:hover,
+    .form-select:hover,
+    .form-textarea:hover {
+      border-color: var(--border-focus);
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-muted);
+    }
+
+    .form-input.error,
+    .form-select.error,
+    .form-textarea.error {
+      border-color: var(--error);
+    }
+
+    .form-input.error:focus,
+    .form-select.error:focus,
+    .form-textarea.error:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+    .form-error {
+      font-size: var(--text-xs);
+      color: var(--error);
+      display: none;
+    }
+
+    .form-error.visible {
+      display: block;
+    }
+
+    .form-hint {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right var(--space-3) center;
+      padding-right: var(--space-10);
+      cursor: pointer;
+    }
+
+    .form-textarea {
+      min-height: 6rem;
+      resize: vertical;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .radio-group.horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      cursor: pointer;
+    }
+
+    .radio-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .radio-indicator {
+      flex-shrink: 0;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid var(--border-focus);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      margin-top: 0.125rem;
+    }
+
+    .radio-indicator::after {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--accent);
+      transform: scale(0);
+      transition: transform var(--transition-fast);
+    }
+
+    .radio-input:checked + .radio-indicator {
+      border-color: var(--accent);
+    }
+
+    .radio-input:checked + .radio-indicator::after {
+      transform: scale(1);
+    }
+
+    .radio-input:focus-visible + .radio-indicator {
+      box-shadow: 0 0 0 3px var(--accent-muted);
+    }
+
+    .radio-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .radio-label {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .radio-description {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
+    .tone-cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .tone-card {
+      position: relative;
+    }
+
+    .tone-card .radio-input {
+      position: absolute;
+    }
+
+    .tone-card .card-content {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--bg-surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .tone-card .radio-input:checked + .card-content {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .tone-card .radio-input:focus-visible + .card-content {
+      box-shadow: 0 0 0 3px var(--accent-muted);
+    }
+
+    .tone-card:hover .card-content {
+      border-color: var(--border-focus);
+    }
+
+    .tone-indicator {
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 2px solid var(--border-focus);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+      transition: all var(--transition-fast);
+    }
+
+    .tone-card .radio-input:checked + .card-content .tone-indicator {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .tone-card .radio-input:checked + .card-content .tone-indicator::after {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .tone-info h4 {
+      font-size: var(--text-base);
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+
+    .tone-info p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .conditional-field {
+      display: none;
+      margin-top: var(--space-4);
+      padding-left: var(--space-8);
+    }
+
+    .conditional-field.visible {
+      display: block;
+      animation: fadeSlideIn var(--transition-base) forwards;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: var(--space-4);
+      margin-top: var(--space-12);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-6);
+      font-family: inherit;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: none;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+    }
+
+    .btn svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .results-grid {
+      display: grid;
+      gap: var(--space-8);
+    }
+
+    @media (min-width: 1024px) {
+      .results-grid {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    .results-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+    }
+
+    .results-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+
+    .results-card-header h3 {
+      font-size: var(--text-lg);
+      font-weight: 600;
+    }
+
+    .gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-6) 0;
+    }
+
+    .gauge-svg {
+      width: 12rem;
+      height: 12rem;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: var(--bg-elevated);
+      stroke-width: 8;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 283;
+      stroke-dashoffset: 283;
+      transition: stroke-dashoffset 1.5s ease-out, stroke 0.3s ease;
+    }
+
+    .gauge-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .gauge-score {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .gauge-label {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: var(--space-1);
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-label-thin { color: var(--error); }
+    .gauge-label-negotiable { color: var(--warning); }
+    .gauge-label-strong { color: var(--accent); }
+    .gauge-label-commanding { color: var(--success); }
+
+    .leverage-points {
+      margin-top: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--border);
+    }
+
+    .leverage-points h4 {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      margin-bottom: var(--space-4);
+      color: var(--text-secondary);
+    }
+
+    .leverage-points ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .leverage-points li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .leverage-points li::before {
+      content: '';
+      width: 0.375rem;
+      height: 0.375rem;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.5rem;
+    }
+
+    .email-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .email-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .email-header h4 {
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+
+    .email-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-copy:hover {
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+
+    .btn-copy.copied {
+      color: var(--success);
+      border-color: var(--success);
+    }
+
+    .btn-copy svg {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+    .email-body {
+      padding: var(--space-6);
+      max-height: 28rem;
+      overflow-y: auto;
+    }
+
+    .email-body::-webkit-scrollbar {
+      width: 0.5rem;
+    }
+
+    .email-body::-webkit-scrollbar-track {
+      background: var(--bg-elevated);
+    }
+
+    .email-body::-webkit-scrollbar-thumb {
+      background: var(--border-focus);
+      border-radius: 9999px;
+    }
+
+    .email-subject {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .email-content {
+      font-size: var(--text-sm);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      color: var(--text-secondary);
+    }
+
+    .email-content p {
+      margin-bottom: var(--space-4);
+    }
+
+    .email-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .email-regenerate {
+      padding: var(--space-4) var(--space-6);
+      border-top: 1px solid var(--border);
+    }
+
+    .phrase-bank {
+      margin-top: var(--space-8);
+    }
+
+    .phrase-bank-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+
+    .phrase-bank-header h3 {
+      font-size: var(--text-lg);
+      font-weight: 600;
+    }
+
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .accordion-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .accordion-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: var(--space-4) var(--space-6);
+      font-family: inherit;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--transition-fast);
+    }
+
+    .accordion-trigger:hover {
+      background: var(--bg-elevated);
+    }
+
+    .accordion-trigger:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .accordion-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: var(--text-muted);
+      transition: transform var(--transition-base);
+    }
+
+    .accordion-item.open .accordion-icon {
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 0 var(--space-6) var(--space-6);
+    }
+
+    .accordion-item.open .accordion-content {
+      display: block;
+    }
+
+    .phrase-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .phrase-chip {
+      position: relative;
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .phrase-chip:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .phrase-chip.copied {
+      animation: chipPulse 0.3s ease;
+    }
+
+    @keyframes chipPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .phrase-chip .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: var(--space-1) var(--space-2);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast);
+      margin-bottom: var(--space-1);
+    }
+
+    .phrase-chip.copied .tooltip {
+      opacity: 1;
+    }
+
+    .start-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 12rem);
+      text-align: center;
+      padding: var(--space-8) 0;
+    }
+
+    .start-logo {
+      width: 4rem;
+      height: 4rem;
+      margin-bottom: var(--space-6);
+    }
+
+    .start-title {
+      font-family: var(--font-serif);
+      font-size: var(--text-hero);
+      font-weight: 400;
+      line-height: 1.1;
+      margin-bottom: var(--space-4);
+      max-width: 20rem;
+    }
+
+    .start-subtitle {
+      font-size: var(--text-lg);
+      color: var(--text-secondary);
+      max-width: 28rem;
+      margin-bottom: var(--space-8);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container header-inner">
+      <a href="#" class="logo" onclick="navigateTo('step1'); return false;">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="6" fill="var(--bg-elevated)"/>
+          <path d="M8 22V14a2 2 0 012-2h12a2 2 0 012 2v8" stroke="var(--accent)" stroke-width="2"/>
+          <rect x="6" y="12" width="20" height="10" rx="2" stroke="var(--accent)" stroke-width="2"/>
+          <path d="M16 12V8l4-3" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="logo-text">Negotiator</span>
+      </a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="start" class="step active start-screen">
+      <svg class="start-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="6" fill="var(--bg-elevated)"/>
+        <path d="M8 22V14a2 2 0 012-2h12a2 2 0 012 2v8" stroke="var(--accent)" stroke-width="2"/>
+        <rect x="6" y="12" width="20" height="10" rx="2" stroke="var(--accent)" stroke-width="2"/>
+        <path d="M16 12V8l4-3" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1 class="start-title">Negotiate with confidence</h1>
+      <p class="start-subtitle">Turn your offer into your ideal compensation package with data-driven strategy</p>
+      <button class="btn btn-primary" onclick="navigateTo('step1')">
+        Start Analysis
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </section>
+
+    <section id="step1" class="step">
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Step 1 of 4</span>
+          <span class="progress-percentage">25%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 25%"></div>
+        </div>
+      </div>
+
+      <div class="step-header">
+        <p class="step-eyebrow">Offer Details</p>
+        <h2 class="step-title">What are they offering?</h2>
+        <p class="step-description">Enter the details from your offer letter. We'll use this to calculate your leverage.</p>
+      </div>
+
+      <form id="form-step1" class="form-grid" novalidate>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="company">Company name</label>
+            <input type="text" id="company" name="company" class="form-input" placeholder="Acme Corp" required>
+            <span class="form-error">Please enter the company name</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="role">Role title</label>
+            <input type="text" id="role" name="role" class="form-input" placeholder="Senior GRC Engineer" required>
+            <span class="form-error">Please enter the role title</span>
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="baseSalary">Base salary offered</label>
+            <input type="text" id="baseSalary" name="baseSalary" class="form-input" placeholder="185,000" required>
+            <span class="form-error">Please enter the base salary</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signingBonus">Signing bonus <span class="optional">(optional)</span></label>
+            <input type="text" id="signingBonus" name="signingBonus" class="form-input" placeholder="25,000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="equity">Equity / RSUs <span class="optional">(optional)</span></label>
+          <input type="text" id="equity" name="equity" class="form-input" placeholder="$50K over 4 years">
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="pto">PTO days <span class="optional">(optional)</span></label>
+            <input type="number" id="pto" name="pto" class="form-input" placeholder="20" min="0" max="365">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="benefits">Benefits tier</label>
+            <select id="benefits" name="benefits" class="form-select">
+              <option value="">Select tier...</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Good">Good</option>
+              <option value="Average">Average</option>
+              <option value="Poor">Poor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Work location</label>
+          <div class="radio-group horizontal" role="radiogroup" aria-required="true">
+            <label class="radio-item">
+              <input type="radio" name="location" value="Remote" class="radio-input" required>
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Remote</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="location" value="Hybrid" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Hybrid</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="location" value="On-site" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">On-site</span>
+              </span>
+            </label>
+          </div>
+          <span class="form-error">Please select a work location</span>
+        </div>
+
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-secondary" onclick="navigateTo('start')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section id="step2" class="step">
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Step 2 of 4</span>
+          <span class="progress-percentage">50%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 50%"></div>
+        </div>
+      </div>
+
+      <div class="step-header">
+        <p class="step-eyebrow">Your Situation</p>
+        <h2 class="step-title">Where do you stand?</h2>
+        <p class="step-description">This information helps us assess your negotiating position. Everything stays private.</p>
+      </div>
+
+      <form id="form-step2" class="form-grid" novalidate>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="currentSalary">Current base salary</label>
+            <input type="text" id="currentSalary" name="currentSalary" class="form-input" placeholder="165,000" required>
+            <span class="form-error">Please enter your current salary</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="targetSalary">Target base salary</label>
+            <input type="text" id="targetSalary" name="targetSalary" class="form-input" placeholder="210,000" required>
+            <span class="form-error">Please enter your target salary</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="walkaway">Your walk-away minimum</label>
+          <input type="text" id="walkaway" name="walkaway" class="form-input" placeholder="180,000" required>
+          <span class="form-hint">This stays private — it's just for calculating your leverage.</span>
+          <span class="form-error">Please enter your walk-away minimum</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Employment status</label>
+          <div class="radio-group" role="radiogroup" aria-required="true">
+            <label class="radio-item">
+              <input type="radio" name="employmentStatus" value="Employed" class="radio-input" required>
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Employed</span>
+                <span class="radio-description">Currently working, not urgently job-seeking</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="employmentStatus" value="Actively interviewing" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Actively interviewing elsewhere</span>
+                <span class="radio-description">In the interview process with other companies</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="employmentStatus" value="Have competing offer" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Have a competing offer</span>
+                <span class="radio-description">Another offer on the table</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="employmentStatus" value="Unemployed" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Unemployed</span>
+                <span class="radio-description">Not currently employed</span>
+              </span>
+            </label>
+          </div>
+          <span class="form-error">Please select your employment status</span>
+        </div>
+
+        <div id="competingOfferField" class="conditional-field">
+          <div class="form-group">
+            <label class="form-label" for="competingOffer">Competing offer base</label>
+            <input type="text" id="competingOffer" name="competingOffer" class="form-input" placeholder="195,000">
+            <span class="form-hint">Even a verbal offer counts. Don't undersell yourself.</span>
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label" for="experience">Years of experience</label>
+            <input type="number" id="experience" name="experience" class="form-input" placeholder="8" min="0" max="50" required>
+            <span class="form-error">Please enter your years of experience</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="timePressure">Time pressure on decision</label>
+            <select id="timePressure" name="timePressure" class="form-select" required>
+              <option value="">Select...</option>
+              <option value="Low">Low — I can take my time</option>
+              <option value="Medium">Medium — a few weeks to decide</option>
+              <option value="High">High — exploding offer or urgent</option>
+            </select>
+            <span class="form-error">Please select time pressure</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Are you a top performer at your current company?</label>
+          <div class="radio-group horizontal" role="radiogroup" aria-required="true">
+            <label class="radio-item">
+              <input type="radio" name="topPerformer" value="Yes" class="radio-input" required>
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">Yes</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="topPerformer" value="No" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">No</span>
+              </span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="topPerformer" value="N/A" class="radio-input">
+              <span class="radio-indicator"></span>
+              <span class="radio-content">
+                <span class="radio-label">N/A</span>
+              </span>
+            </label>
+          </div>
+          <span class="form-error">Please select an option</span>
+        </div>
+
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-secondary" onclick="navigateTo('step1')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section id="step3" class="step">
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Step 3 of 4</span>
+          <span class="progress-percentage">75%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 75%"></div>
+        </div>
+      </div>
+
+      <div class="step-header">
+        <p class="step-eyebrow">Tone Calibration</p>
+        <h2 class="step-title">How do you want to sound?</h2>
+        <p class="step-description">Choose an email tone that matches your relationship with the company and your leverage.</p>
+      </div>
+
+      <form id="form-step3" class="form-grid" novalidate>
+        <div class="form-group">
+          <label class="form-label">Desired email tone</label>
+          <div class="tone-cards" role="radiogroup" aria-required="true">
+            <div class="tone-card">
+              <input type="radio" id="tone-warm" name="tone" value="warm" class="radio-input" required>
+              <label class="card-content" for="tone-warm">
+                <span class="tone-indicator"></span>
+                <div class="tone-info">
+                  <h4>Collaborative &amp; Warm</h4>
+                  <p>Best when you love the company and don't want to risk the relationship</p>
+                </div>
+              </label>
+            </div>
+            <div class="tone-card">
+              <input type="radio" id="tone-direct" name="tone" value="direct" class="radio-input">
+              <label class="card-content" for="tone-direct">
+                <span class="tone-indicator"></span>
+                <div class="tone-info">
+                  <h4>Confident &amp; Direct</h4>
+                  <p>Best when you have leverage or a competing offer</p>
+                </div>
+              </label>
+            </div>
+            <div class="tone-card">
+              <input type="radio" id="tone-diplomatic" name="tone" value="diplomatic" class="radio-input">
+              <label class="card-content" for="tone-diplomatic">
+                <span class="tone-indicator"></span>
+                <div class="tone-info">
+                  <h4>Diplomatic &amp; Strategic</h4>
+                  <p>Best for ambiguous situations or first offers from dream companies</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <span class="form-error">Please select a tone</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="customContext">Additional context <span class="optional">(optional)</span></label>
+          <textarea id="customContext" name="customContext" class="form-textarea" placeholder="Anything else the email should reference? Unique skills, relocation needs, personal constraints..."></textarea>
+        </div>
+
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-secondary" onclick="navigateTo('step2')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Generate Results
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section id="result" class="step">
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Results</span>
+          <span class="progress-percentage">100%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <div class="step-header">
+        <p class="step-eyebrow">Your Negotiation Package</p>
+        <h2 class="step-title">Ready to negotiate?</h2>
+        <p class="step-description">Here's your leverage analysis and a tailored negotiation email based on your situation.</p>
+      </div>
+
+      <div class="results-grid">
+        <div class="results-card">
+          <div class="results-card-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+            <h3>Leverage Score</h3>
+          </div>
+
+          <div class="gauge-container">
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="45"/>
+                <circle id="gaugeFill" class="gauge-fill" cx="50" cy="50" r="45"/>
+              </svg>
+              <div class="gauge-text">
+                <div id="gaugeScore" class="gauge-score">0</div>
+                <div id="gaugeLabel" class="gauge-label">Calculating...</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="leveragePoints" class="leverage-points">
+            <h4>Your leverage breakdown</h4>
+            <ul></ul>
+          </div>
+        </div>
+
+        <div class="email-card">
+          <div class="email-header">
+            <h4>Negotiation Email</h4>
+            <div class="email-actions">
+              <button id="copyEmailBtn" class="btn-copy" onclick="copyEmail()">
+                <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <svg class="check-icon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+          <div class="email-body">
+            <div id="emailSubject" class="email-subject"></div>
+            <div id="emailContent" class="email-content"></div>
+          </div>
+          <div class="email-regenerate">
+            <button class="btn btn-ghost" onclick="navigateTo('step3')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6"/>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                <path d="M3 22v-6h6"/>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+              Regenerate with different tone
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="phrase-bank">
+        <div class="phrase-bank-header">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          <h3>Negotiation Phrase Bank</h3>
+        </div>
+
+        <div class="accordion">
+          <div class="accordion-item">
+            <button class="accordion-trigger" onclick="toggleAccordion(this)" aria-expanded="false">
+              Opening Softeners
+              <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <div class="phrase-chips">
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I'm very excited about this opportunity and the directionally aligned vision for the team
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  Thank you for this thoughtful offer — I'm genuinely enthusiastic about contributing to the team
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I'm excited about the role and wanted to share some thoughts on how we might work together on the terms
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I deeply appreciate you putting this together and am eager to find a path forward
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  This is a compelling offer, and I want to explore whether we can get creative on a few points
+                  <span class="tooltip">Copied!</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger" onclick="toggleAccordion(this)" aria-expanded="false">
+              Anchoring Phrases
+              <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <div class="phrase-chips">
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  Based on my research and market data, the competitive range for this role is typically...
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  Given my experience and the scope of this role, I believe a number in the range of... would be appropriate
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I've received an offer that is competitive with market at...
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  My target is to find a package that is competitive with market while recognizing the value I'd bring
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  Based on where I'm currently at and what I've been discussed elsewhere, I'm targeting...
+                  <span class="tooltip">Copied!</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger" onclick="toggleAccordion(this)" aria-expanded="false">
+              Closing Bridges
+              <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <div class="phrase-chips">
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I'm confident we can find a number that works for both sides and gets us to an exciting place together
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I want to make this work and am hopeful we can bridge this gap
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I'm looking forward to the possibility of joining and am confident we'll land on something fair
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  I appreciate your flexibility on this — I think a small adjustment gets us to yes
+                  <span class="tooltip">Copied!</span>
+                </button>
+                <button class="phrase-chip" onclick="copyPhrase(this)">
+                  Let's get creative on the overall package and find a path that works for everyone
+                  <span class="tooltip">Copied!</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <button type="button" class="btn btn-secondary" onclick="navigateTo('step3')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Back
+        </button>
+        <button type="button" class="btn btn-primary" onclick="navigateTo('start'); resetForm();">
+          Start New Analysis
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      currentStep: 'start',
+      formData: {
+        company: '',
+        role: '',
+        baseSalary: 0,
+        signingBonus: 0,
+        equity: '',
+        pto: 0,
+        location: '',
+        benefits: '',
+        currentSalary: 0,
+        walkaway: 0,
+        targetSalary: 0,
+        employmentStatus: '',
+        competingOffer: 0,
+        experience: 0,
+        timePressure: '',
+        topPerformer: '',
+        tone: '',
+        customContext: ''
+      }
+    };
+
+    function navigateTo(step) {
+      const steps = ['start', 'step1', 'step2', 'step3', 'result'];
+      if (!steps.includes(step)) return;
+
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      const targetEl = document.getElementById(step);
+      if (targetEl) {
+        targetEl.classList.add('active');
+        state.currentStep = step;
+        window.location.hash = step;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (step === 'result') {
+          calculateLeverage();
+          generateEmail();
+          animateGauge();
+        }
+      }
+    }
+
+    function handleHashChange() {
+      const hash = window.location.hash.slice(1) || 'start';
+      navigateTo(hash);
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+    }
+
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function parseNumber(str) {
+      return parseInt(str.replace(/,/g, ''), 10) || 0;
+    }
+
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+      const id = input.id || '';
+      if (id.includes('Salary') || id === 'walkaway' || id === 'currentSalary' || id === 'competingOffer') {
+        input.addEventListener('blur', function() {
+          const value = parseNumber(this.value);
+          if (value > 0) {
+            this.value = formatNumber(value);
+          }
+        });
+      }
+    });
+
+    document.querySelectorAll('input[name="employmentStatus"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const field = document.getElementById('competingOfferField');
+        if (field) {
+          if (this.value === 'Have competing offer') {
+            field.classList.add('visible');
+          } else {
+            field.classList.remove('visible');
+          }
+        }
+      });
+    });
+
+    function validateStep(stepNum) {
+      const form = document.getElementById('form-step' + stepNum);
+      if (!form) return true;
+
+      let isValid = true;
+      const inputs = form.querySelectorAll('input[required], select[required]');
+
+      inputs.forEach(input => {
+        const errorEl = input.closest('.form-group')?.querySelector('.form-error');
+        input.classList.remove('error');
+
+        if (input.type === 'radio') {
+          const checked = form.querySelector('input[name="' + input.name + '"]:checked');
+          if (!checked) {
+            isValid = false;
+            const group = form.querySelector('input[name="' + input.name + '"]').closest('.form-group');
+            if (group) {
+              const err = group.querySelector('.form-error');
+              if (err) err.classList.add('visible');
+            }
+          }
+        } else if (!input.value.trim()) {
+          isValid = false;
+          input.classList.add('error');
+          if (errorEl) errorEl.classList.add('visible');
+        } else {
+          if (errorEl) errorEl.classList.remove('visible');
+        }
+      });
+
+      return isValid;
+    }
+
+    document.getElementById('form-step1')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!validateStep(1)) return;
+
+      state.formData.company = document.getElementById('company').value;
+      state.formData.role = document.getElementById('role').value;
+      state.formData.baseSalary = parseNumber(document.getElementById('baseSalary').value);
+      state.formData.signingBonus = parseNumber(document.getElementById('signingBonus').value) || 0;
+      state.formData.equity = document.getElementById('equity').value;
+      state.formData.pto = parseInt(document.getElementById('pto').value, 10) || 0;
+      state.formData.benefits = document.getElementById('benefits').value;
+      const loc = document.querySelector('input[name="location"]:checked');
+      state.formData.location = loc ? loc.value : '';
+
+      navigateTo('step2');
+    });
+
+    document.getElementById('form-step2')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!validateStep(2)) return;
+
+      state.formData.currentSalary = parseNumber(document.getElementById('currentSalary').value);
+      state.formData.walkaway = parseNumber(document.getElementById('walkaway').value);
+      state.formData.targetSalary = parseNumber(document.getElementById('targetSalary').value);
+      const empStatus = document.querySelector('input[name="employmentStatus"]:checked');
+      state.formData.employmentStatus = empStatus ? empStatus.value : '';
+      state.formData.competingOffer = parseNumber(document.getElementById('competingOffer').value) || 0;
+      state.formData.experience = parseInt(document.getElementById('experience').value, 10) || 0;
+      state.formData.timePressure = document.getElementById('timePressure').value;
+      const topPerf = document.querySelector('input[name="topPerformer"]:checked');
+      state.formData.topPerformer = topPerf ? topPerf.value : '';
+
+      navigateTo('step3');
+    });
+
+    document.getElementById('form-step3')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!validateStep(3)) return;
+
+      const toneSelected = document.querySelector('input[name="tone"]:checked');
+      state.formData.tone = toneSelected ? toneSelected.value : '';
+      state.formData.customContext = document.getElementById('customContext').value;
+
+      navigateTo('result');
+    });
+
+    function calculateLeverage() {
+      let score = 0;
+      const points = [];
+
+      if (state.formData.employmentStatus === 'Have competing offer' && state.formData.competingOffer > 0) {
+        score += 30;
+        points.push('You have a competing offer at $' + formatNumber(state.formData.competingOffer) + ', which gives you strong negotiating power.');
+      }
+
+      if (state.formData.employmentStatus === 'Employed') {
+        score += 15;
+        points.push("You're currently employed, which means you're not desperate — you can walk away if needed.");
+      }
+
+      if (state.formData.baseSalary < state.formData.targetSalary) {
+        score += 10;
+        points.push('The offer ($' + formatNumber(state.formData.baseSalary) + ') is below your target of $' + formatNumber(state.formData.targetSalary) + ', giving you room to negotiate.');
+      }
+
+      if (state.formData.baseSalary > state.formData.walkaway) {
+        score += 10;
+        points.push('The offer exceeds your walk-away minimum, giving you a solid BATNA if negotiations stall.');
+      }
+
+      if (state.formData.timePressure === 'Low') {
+        score += 10;
+        points.push('Low time pressure means you can take your time and wait for a better response.');
+      } else if (state.formData.timePressure === 'High') {
+        points.push('High time pressure (exploding offer) — you\'ll want to negotiate quickly and firmly.');
+      }
+
+      if (state.formData.experience >= 5) {
+        score += 10;
+        points.push('Your ' + state.formData.experience + ' years of experience is a valuable asset they\'re buying.');
+      }
+
+      if (state.formData.topPerformer === 'Yes') {
+        score += 10;
+        points.push("Being a top performer signals you're worth fighting for — use that credibility.");
+      }
+
+      let label, labelClass;
+      if (score <= 30) {
+        label = 'Thin Ice';
+        labelClass = 'gauge-label-thin';
+      } else if (score <= 55) {
+        label = 'Negotiable';
+        labelClass = 'gauge-label-negotiable';
+      } else if (score <= 75) {
+        label = 'Strong Position';
+        labelClass = 'gauge-label-strong';
+      } else {
+        label = 'Commanding';
+        labelClass = 'gauge-label-commanding';
+      }
+
+      const ul = document.querySelector('#leveragePoints ul');
+      if (ul) {
+        ul.innerHTML = '';
+        points.forEach(function(p) {
+          const li = document.createElement('li');
+          li.textContent = p;
+          ul.appendChild(li);
+        });
+      }
+
+      return { score: Math.min(score, 100), label: label, labelClass: labelClass };
+    }
+
+    function animateGauge() {
+      const result = calculateLeverage();
+      const score = result.score;
+      const label = result.label;
+      const labelClass = result.labelClass;
+
+      const gaugeScore = document.getElementById('gaugeScore');
+      const gaugeLabel = document.getElementById('gaugeLabel');
+      const gaugeFill = document.getElementById('gaugeFill');
+
+      if (!gaugeScore || !gaugeLabel || !gaugeFill) return;
+
+      gaugeLabel.textContent = label;
+      gaugeLabel.className = 'gauge-label ' + labelClass;
+
+      let color;
+      if (score <= 30) color = 'var(--error)';
+      else if (score <= 55) color = 'var(--warning)';
+      else if (score <= 75) color = 'var(--accent)';
+      else color = 'var(--success)';
+
+      gaugeFill.style.stroke = color;
+
+      const duration = 1500;
+      const start = performance.now();
+
+      function updateCount(currentTime) {
+        const elapsed = currentTime - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentScore = Math.round(easeOut * score);
+
+        gaugeScore.textContent = currentScore;
+
+        const circumference = 2 * Math.PI * 45;
+        const offset = circumference - (easeOut * score / 100) * circumference;
+        gaugeFill.style.strokeDashoffset = offset;
+
+        if (progress < 1) {
+          requestAnimationFrame(updateCount);
+        }
+      }
+
+      requestAnimationFrame(updateCount);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function generateEmail() {
+      const d = state.formData;
+
+      const toneStyles = {
+        warm: { adjectives: ['excited', 'enthusiastic', 'thrilled'], bridge: "I'm hopeful we can work together" },
+        direct: { adjectives: ['confident', 'clear', 'straightforward'], bridge: "I'm confident we can align on terms" },
+        diplomatic: { adjectives: ['thoughtful', 'considerate', 'constructive'], bridge: "I appreciate your perspective and am optimistic we can find common ground" }
+      };
+
+      const style = toneStyles[d.tone] || toneStyles.worm;
+
+      const subject = 'Re: Offer for ' + d.role + ' at ' + d.company;
+      const emailSubjectEl = document.getElementById('emailSubject');
+      if (emailSubjectEl) {
+        emailSubjectEl.textContent = subject;
+      }
+
+      let body = '';
+
+      body += 'Dear ' + d.company + ' Hiring Team,\n\n';
+      body += 'Thank you for extending this offer. I\'m ' + style.adjectives[0] + ' about the opportunity to join as ' + d.role + ' and genuinely impressed by the team\'s vision and the work being done here.\n\n';
+
+      if (d.tone === 'direct' && (d.employmentStatus === 'Have competing offer' || d.competingOffer > 0)) {
+        body += 'I\'ve carefully reviewed the offer and want to have an open conversation about the compensation. Based on my research and market data, as well as a competing offer I\'ve received, I believe there\'s room for us to find a number that\'s more competitive with market.\n\n';
+      } else if (d.tone === 'warm') {
+        body += 'The offer has directionally aligned with much of what we discussed, and I\'m excited about the possibility of contributing to ' + d.company + '. That said, I\'d like to explore whether we can get creative on a few aspects of the package to make it work better for both of us.\n\n';
+      } else {
+        body += 'I\'m writing to share my thoughts on the offer. While I appreciate the package as presented, I\'d like to explore whether there might be flexibility to get creative on certain components, particularly given my experience and the value I\'d bring to the role.\n\n';
+      }
+
+      if (d.competingOffer > 0 && d.employmentStatus === 'Have competing offer') {
+        body += 'I want to be transparent: I\'ve received another offer that\'s competitive with market at a higher base. I\'m genuinely excited about ' + d.company + ' specifically, which is why I\'m having this conversation rather than simply accepting elsewhere. My goal is to find a way to make this work if we can find some common ground on compensation.\n\n';
+      }
+
+      body += 'Based on my ' + d.experience + ' years of experience in this field and current market rates for roles of this scope, I believe a package in the range of $' + formatNumber(d.targetSalary) + ' would be more competitive with market. I\'m confident we can get creative on the overall structure — whether through base, signing bonus, equity, or other components — to find something that works for both sides.\n\n';
+
+      if (d.baseSalary < d.walkaway) {
+        body += 'I should be direct: the current offer falls below my walk-away threshold, which is set at $' + formatNumber(d.walkaway) + '. I\'m not sharing this to create friction, but because I want you to understand where I am. I\'m hopeful we can bridge this gap together.\n\n';
+      }
+
+      if (d.employmentStatus === 'Employed') {
+        body += 'I\'m fortunate to be in a position where I can take the time to get this right, and I appreciate you working through this with me. I\'m excited about the opportunity and confident we\'ll find a path forward.\n\n';
+      }
+
+      if (d.customContext.trim()) {
+        body += d.customContext + '\n\n';
+      }
+
+      body += style.bridge + '. I\'m looking forward to hearing your thoughts and am happy to discuss this further at your convenience.\n\n';
+      body += 'Best regards,\n[Your Name]';
+
+      const emailContentEl = document.getElementById('emailContent');
+      if (emailContentEl) {
+        emailContentEl.innerHTML = '';
+        const paragraphs = body.split('\n\n');
+        paragraphs.forEach(function(p) {
+          const pEl = document.createElement('p');
+          pEl.textContent = p;
+          emailContentEl.appendChild(pEl);
+        });
+      }
+    }
+
+    function copyEmail() {
+      const subject = document.getElementById('emailSubject').textContent || '';
+      const content = document.getElementById('emailContent').innerText || '';
+      const fullEmail = subject + '\n\n' + content;
+
+      navigator.clipboard.writeText(fullEmail).then(function() {
+        const btn = document.getElementById('copyEmailBtn');
+        if (btn) {
+          btn.classList.add('copied');
+          const copyIcon = btn.querySelector('.copy-icon');
+          const checkIcon = btn.querySelector('.check-icon');
+          const span = btn.querySelector('span');
+          if (copyIcon) copyIcon.style.display = 'none';
+          if (checkIcon) checkIcon.style.display = 'block';
+          if (span) span.textContent = 'Copied!';
+
+          setTimeout(function() {
+            btn.classList.remove('copied');
+            if (copyIcon) copyIcon.style.display = 'block';
+            if (checkIcon) checkIcon.style.display = 'none';
+            if (span) span.textContent = 'Copy';
+          }, 2000);
+        }
+      });
+    }
+
+    function copyPhrase(chip) {
+      const text = chip.firstChild.textContent || chip.textContent.replace('Copied!', '').trim();
+      navigator.clipboard.writeText(text).then(function() {
+        chip.classList.add('copied');
+        setTimeout(function() { chip.classList.remove('copied'); }, 300);
+      });
+    }
+
+    function toggleAccordion(trigger) {
+      const item = trigger.closest('.accordion-item');
+      if (!item) return;
+      const isOpen = item.classList.contains('open');
+
+      document.querySelectorAll('.accordion-item').forEach(function(i) {
+        i.classList.remove('open');
+        const btn = i.querySelector('.accordion-trigger');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+
+      if (!isOpen) {
+        item.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function resetForm() {
+      state.formData = {
+        company: '', role: '', baseSalary: 0, signingBonus: 0, equity: '', pto: 0,
+        location: '', benefits: '', currentSalary: 0, walkaway: 0, targetSalary: 0,
+        employmentStatus: '', competingOffer: 0, experience: 0, timePressure: '',
+        topPerformer: '', tone: '', customContext: ''
+      };
+
+      document.querySelectorAll('form').forEach(function(f) { f.reset(); });
+      document.querySelectorAll('.form-error').forEach(function(e) { e.classList.remove('visible'); });
+      document.querySelectorAll('.form-input.error').forEach(function(i) { i.classList.remove('error'); });
+      const cof = document.getElementById('competingOfferField');
+      if (cof) cof.classList.remove('visible');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const hash = window.location.hash.slice(1) || 'start';
+      navigateTo(hash);
+    });
+  </script>
+</body>
+</html>
